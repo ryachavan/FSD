@@ -9,11 +9,13 @@ function FoodList({ addToCart }) {
   ];
 
   return (
-    <div>
+    <div className="food-list">
       <h2>Menu</h2>
-      {foods.map((food) => (
-        <FoodItem key={food.id} food={food} addToCart={addToCart} />
-      ))}
+      <div className="food-grid">
+        {foods.map((food) => (
+          <FoodItem key={food.id} food={food} addToCart={addToCart} />
+        ))}
+      </div>
     </div>
   );
 }

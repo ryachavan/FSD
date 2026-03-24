@@ -2,16 +2,24 @@ function Cart({ cart }) {
     const total = cart.reduce((sum, item) => sum + item.price, 0);
   
     return (
-      <div style={{ background: "#f4f4f4", padding: "15px", marginTop: "20px" }}>
+      <div className="cart">
         <h2>Your Cart</h2>
         {cart.length === 0 ? (
-          <p>Cart is empty</p>
+          <p className="cart-empty">Cart is empty</p>
         ) : (
-          cart.map((item, index) => (
-            <p key={index}>{item.name} — ₹{item.price}</p>
-          ))
+            <>
+          {cart.map((item, index) => (
+            <div key={index} className="cart-item">
+              <span>{item.name}</span>
+              <span>₹{item.price}</span>
+            </div>
+          ))}
+          <div className="cart-total">
+            <span>Total</span>
+            <span>₹{total}</span>
+          </div>
+        </>
         )}
-        <h3>Total: ₹{total}</h3>
       </div>
     );
   }
