@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Movie Recommendation App</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, select { margin: 5px; }
+    button { margin: 5px; }
+    .movie { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+
+<h1>Movie Recommendations</h1>
+
+<h3>Add / Edit Movie</h3>
+<input id="title" placeholder="Title">
+<input id="genre" placeholder="Genre">
+<input id="rating" type="number" placeholder="Rating (1-5)">
+<select id="recommended">
+  <option value="Yes">Yes</option>
+  <option value="No">No</option>
+</select>
+<button onclick="addMovie()">Add</button>
+<button onclick="updateMovie()">Update</button>
+
+<hr>
+
+<h3>Filter by Rating</h3>
+<input id="filterRating" type="number" placeholder="Enter rating">
+<button onclick="filterMovies()">Filter</button>
+<button onclick="loadMovies()">Show All</button>
+
+<hr>
+
+<h3>Movies List</h3>
+<div id="movies"></div>
+
+<script>
+let editingId = null;
+
+async function loadMovies() {
+  const res = await fetch("/movies");
+  const data = await res.json();
+  displayMovies(data);
+}
+
+async function filterMovies() {
+  const rating = document.getElementById("filterRating").value;
+  const res = await fetch(`/movies?rating=${rating}`);
+  const data = await res.json();
+  displayMovies(data);
+}
+
+async function addMovie() {
+  const title = document.getElementById("title").value;
+  const genre = document.getElementById("genre").value;
+  const rating = document.getElementById("rating").value;
+  const recommended = document.getElementById("recommended").value;
+
+  await fetch("/movies", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, genre, rating, recommended })
+  });
+
+  clearForm();
+  loadMovies();
+}
+
+async function updateMovie() {
+  if (!editingId) return alert("Select a movie to edit first!");
+
+  const title = document.getElementById("title").value;
+  const genre = document.getElementById("genre").value;
+  const rating = document.getElementById("rating").value;
+  const recommended = document.getElementById("recommended").value;
+
+  await fetch(`/movies/${editingId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, genre, rating, recommended })
+  });
+
+  clearForm();
+  editingId = null;
+  loadMovies();
+}
+
+function editMovie(movie) {
+  editingId = movie.id;
+
+  document.getElementById("title").value = movie.title;
+  document.getElementById("genre").value = movie.genre;
+  document.getElementById("rating").value = movie.rating;
+  document.getElementById("recommended").value = movie.recommended;
+}
+
+async function deleteMovie(id) {
+  await fetch(`/movies/${id}`, { method: "DELETE" });
+  loadMovies();
+}
+
+function displayMovies(movies) {
+  const container = document.getElementById("movies");
+  container.innerHTML = "";
+
+  movies.forEach(movie => {
+    container.innerHTML += `
+      <div class="movie">
+        <strong>${movie.title}</strong> <br>
+        Genre: ${movie.genre} <br>
+        Rating: ${movie.rating} <br>
+        Recommended: ${movie.recommended} <br>
+        <button onclick='editMovie(${JSON.stringify(movie)})'>Edit</button>
+        <button onclick="deleteMovie(${movie.id})">Delete</button>
+      </div>
+    `;
+  });
+}
+
+function clearForm() {
+  document.getElementById("title").value = "";
+  document.getElementById("genre").value = "";
+  document.getElementById("rating").value = "";
+  document.getElementById("recommended").value = "Yes";
+}
+
+loadMovies();
+</script>
+
+</body>
+</html>
