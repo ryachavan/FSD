@@ -1,0 +1,85 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  margin: 0;
+}
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.panel {
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.form-panel {
+  width: 40%;
+  border-right: 2px solid #ddd;
+  background: #fff;
+}
+
+.users-panel {
+  width: 60%;
+  overflow-y: auto;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  padding: 8px 14px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #2d6cdf;
+  color: white;
+}
+
+button.secondary {
+  background: #777;
+}
+
+button.danger {
+  background: #d9534f;
+}
+
+.user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.user-info small {
+  display: block;
+  color: #555;
+}
+
+.query-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.query-bar input {
+  flex: 1;
+}
+
+.query-bar button {
+  padding: 3px 10px;
+  font-size: 13px;
+  height: 30px;
+  min-width: 70px;
+}

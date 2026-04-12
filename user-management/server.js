@@ -1,20 +1,34 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const User = require("./models/User");
+import User from "./models/User.js";
+
+dotenv.config();
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json());
 app.use(cors());
+app.use(express.static(__dirname));
 
-// DB Connection
+// DB connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
-
-/* ================= CRUD ================= */
+  .then(async () => {
+    console.log("MongoDB Connected");
+    console.log("Connected DB:", mongoose.connection.name);
+    await User.syncIndexes();
+  })
+  .catch(err => {
+    console.error("Database connection failed:", err.message);
+    process.exit(1);
+  });
 
 // CREATE
 app.post("/addUser", async (req, res) => {
@@ -26,7 +40,7 @@ app.post("/addUser", async (req, res) => {
   }
 });
 
-// READ ALL
+// READ
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find();
@@ -39,12 +53,24 @@ app.get("/users", async (req, res) => {
 // UPDATE
 app.put("/updateUser/:id", async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
-    res.json(user);
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(updatedUser);
+
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -53,61 +79,114 @@ app.put("/updateUser/:id", async (req, res) => {
 // DELETE
 app.delete("/deleteUser/:id", async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     res.json({ message: "User deleted successfully" });
+
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-/* ================= QUERYING ================= */
-
-// Search by name
+// querying/filtering
 app.get("/search", async (req, res) => {
-  const { name } = req.query;
-  const users = await User.find({ name });
-  res.json(users);
+  try {
+    const { name } = req.query;
+
+    const users = await User.find({
+      name: { $regex: name, $options: "i" }
+    });
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Filter by email + age
 app.get("/filter", async (req, res) => {
-  const { email, minAge } = req.query;
-  const users = await User.find({
-    email,
-    age: { $gte: minAge }
-  });
-  res.json(users);
+  try {
+    const { email, minAge } = req.query;
+
+    const query = {};
+
+    if (email) {
+      query.email = { $regex: email, $options: "i" };
+    }
+
+    if (minAge) {
+      query.age = { $gte: parseInt(minAge) };
+    }
+
+    const users = await User.find(query);
+
+    res.json(users);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Find by hobbies
 app.get("/hobby", async (req, res) => {
-  const { hobby } = req.query;
-  const users = await User.find({ hobbies: hobby });
-  res.json(users);
+  try {
+    const { hobby } = req.query;
+
+    const users = await User.find({
+      hobbies: { $regex: hobby, $options: "i" }
+    });
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Text search
 app.get("/textsearch", async (req, res) => {
-  const { keyword } = req.query;
-  const users = await User.find(
-    { $text: { $search: keyword } }
-  );
-  res.json(users);
+  try {
+    const { keyword } = req.query;
+
+    const users = await User.find({
+      $text: { $search: keyword }
+    });
+
+    res.json(users);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Pagination + Sorting
 app.get("/pagination", async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = 5;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
 
-  const users = await User.find()
-    .sort({ age: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit);
+    const users = await User.find()
+      .sort({ age: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-  res.json(users);
+    res.json(users);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.listen(process.env.PORT, () =>
-  console.log(`Server running on port ${process.env.PORT}`)
-);
+// server
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});

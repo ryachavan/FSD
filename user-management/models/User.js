@@ -1,35 +1,30 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
     minlength: 3,
-    index: true // Single field index
+    index: true
   },
+
   email: {
     type: String,
     required: true,
     unique: true,
     match: /^\S+@\S+\.\S+$/
   },
+
   age: {
     type: Number,
     min: 0,
     max: 120
   },
-  hobbies: [
-    {
-      type: String
-    }
-  ],
-  bio: {
-    type: String
-  },
-  userId: {
-    type: String,
-    unique: true
-  },
+
+  hobbies: [String],
+
+  bio: String,
+
   createdAt: {
     type: Date,
     default: Date.now
@@ -39,16 +34,10 @@ const userSchema = new mongoose.Schema({
 // Compound Index
 userSchema.index({ email: 1, age: -1 });
 
-// Multikey Index (array auto becomes multikey)
+// Multikey Index
 userSchema.index({ hobbies: 1 });
 
 // Text Index
 userSchema.index({ bio: "text" });
 
-// Hashed Index
-userSchema.index({ userId: "hashed" });
-
-// TTL Index (1 hour example)
-userSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 });
-
-module.exports = mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema);

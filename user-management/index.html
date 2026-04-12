@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Management</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <div class="panel form-panel">
+    <h2 id="formTitle">Add/Edit User</h2>
+
+    <input id="userId" type="hidden" />
+
+    <input id="name" placeholder="Name" />
+    <input id="email" placeholder="Email" />
+    <input id="age" type="number" placeholder="Age" />
+    <input id="hobbies" placeholder="Hobbies (comma separated)" />
+    <textarea id="bio" placeholder="Bio"></textarea>
+
+    <button id="submitBtn" onclick="submitForm()">Save</button>
+    <button class="secondary" onclick="resetForm()">Clear</button>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel users-panel">
+    <h2>Users</h2>
+    <div class="query-bar">
+      <input id="searchName" placeholder="Search name" />
+      <button onclick="searchByName()">Search</button>
+    
+      <input id="minAge" type="number" placeholder="Min age" />
+      <button onclick="filterByAge()">Search</button>
+    
+      <input id="searchHobby" placeholder="Hobby" />
+      <button onclick="searchByHobby()">Search</button>
+    
+      <button onclick="loadUsers()">Reset filter</button>
+    </div>
+    <div id="userList"></div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
