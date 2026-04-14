@@ -1,4 +1,3 @@
-const API = "http://localhost:3000";
 let editMode = false;
 
 // querying/filtering
@@ -10,7 +9,7 @@ async function searchByName() {
     return;
   }
 
-  const res = await fetch(`${API}/search?name=${encodeURIComponent(name)}`);
+  const res = await fetch(`/search?name=${encodeURIComponent(name)}`);
   renderUsers(await res.json());
 }
 
@@ -22,7 +21,7 @@ async function filterByAge() {
     return;
   }
 
-  const res = await fetch(`${API}/filter?minAge=${minAge}`);
+  const res = await fetch(`/filter?minAge=${minAge}`);
   renderUsers(await res.json());
 }
 
@@ -34,13 +33,13 @@ async function searchByHobby() {
     return;
   }
 
-  const res = await fetch(`${API}/hobby?hobby=${encodeURIComponent(hobby)}`);
+  const res = await fetch(`/hobby?hobby=${encodeURIComponent(hobby)}`);
   renderUsers(await res.json());
 }
 
 // fetch all users from database
 async function loadUsers() {
-  const res = await fetch(`${API}/users`);
+  const res = await fetch(`/users`);
   const users = await res.json();
   renderUsers(users);
 }
@@ -93,7 +92,7 @@ async function addUser() {
   const user = collectFormData();
   if (!user) return;
 
-  const res = await fetch(`${API}/addUser`, {
+  const res = await fetch(`/addUser`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user)
@@ -116,7 +115,7 @@ async function updateUser() {
   const user = collectFormData();
   if (!user) return;
 
-  await fetch(`${API}/updateUser/${id}`, {
+  await fetch(`/updateUser/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user)
@@ -177,7 +176,7 @@ function collectFormData() {
 
 // delete
 async function deleteUser(id) {
-  await fetch(`${API}/deleteUser/${id}`, { method: "DELETE" });
+  await fetch(`/deleteUser/${id}`, { method: "DELETE" });
   loadUsers();
 }
 
