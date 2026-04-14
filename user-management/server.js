@@ -34,9 +34,29 @@ mongoose.connect(process.env.MONGO_URI)
 app.post("/addUser", async (req, res) => {
   try {
     const user = await User.create(req.body);
-    res.status(201).json(user);
+    res.status(201).json({
+      message: "User created successfully",
+      user
+    });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+
+    // Duplicate email
+    if (err.code === 11000) {
+      return res.status(400).json({
+        error: "Email already exists. Use a different email."
+      });
+    }
+
+    // Validation errors
+    if (err.name === "ValidationError") {
+      return res.status(400).json({
+        error: "Invalid input. Please check required fields."
+      });
+    }
+
+    res.status(500).json({
+      error: "Unable to create user. Please try again."
+    });
   }
 });
 
@@ -44,9 +64,20 @@ app.post("/addUser", async (req, res) => {
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find();
+
+    if (!users.length) {
+      return res.json({
+        message: "No users found",
+        users: []
+      });
+    }
+
     res.json(users);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Failed to fetch users."
+    });
   }
 });
 
@@ -56,7 +87,7 @@ app.put("/updateUser/:id", async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
+      return res.status(400).json({ error: "Invalid user ID." });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -66,13 +97,31 @@ app.put("/updateUser/:id", async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found." });
     }
 
-    res.json(updatedUser);
+    res.json({
+      message: "User updated successfully",
+      updatedUser
+    });
 
   } catch (err) {
-    res.status(400).json({ error: err.message });
+
+    if (err.code === 11000) {
+      return res.status(400).json({
+        error: "Email already exists. Cannot update."
+      });
+    }
+
+    if (err.name === "ValidationError") {
+      return res.status(400).json({
+        error: "Invalid update data."
+      });
+    }
+
+    res.status(500).json({
+      error: "Update failed. Please try again."
+    });
   }
 });
 
@@ -82,19 +131,21 @@ app.delete("/deleteUser/:id", async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
+      return res.status(400).json({ error: "Invalid user ID." });
     }
 
     const deletedUser = await User.findByIdAndDelete(id);
 
     if (!deletedUser) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found." });
     }
 
-    res.json({ message: "User deleted successfully" });
+    res.json({ message: "User deleted successfully." });
 
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({
+      error: "Delete operation failed."
+    });
   }
 });
 
@@ -103,20 +154,28 @@ app.get("/search", async (req, res) => {
   try {
     const { name } = req.query;
 
+    if (!name) {
+      return res.status(400).json({
+        error: "Name parameter is required."
+      });
+    }
+
     const users = await User.find({
       name: { $regex: name, $options: "i" }
     });
 
     res.json(users);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Search failed."
+    });
   }
 });
 
 app.get("/filter", async (req, res) => {
   try {
     const { email, minAge } = req.query;
-
     const query = {};
 
     if (email) {
@@ -128,11 +187,12 @@ app.get("/filter", async (req, res) => {
     }
 
     const users = await User.find(query);
-
     res.json(users);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Filtering failed."
+    });
   }
 });
 
@@ -140,13 +200,22 @@ app.get("/hobby", async (req, res) => {
   try {
     const { hobby } = req.query;
 
+    if (!hobby) {
+      return res.status(400).json({
+        error: "Hobby parameter is required."
+      });
+    }
+
     const users = await User.find({
       hobbies: { $regex: hobby, $options: "i" }
     });
 
     res.json(users);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Hobby search failed."
+    });
   }
 });
 
@@ -155,6 +224,12 @@ app.get("/textsearch", async (req, res) => {
   try {
     const { keyword } = req.query;
 
+    if (!keyword) {
+      return res.status(400).json({
+        error: "Keyword is required."
+      });
+    }
+
     const users = await User.find({
       $text: { $search: keyword }
     });
@@ -162,7 +237,9 @@ app.get("/textsearch", async (req, res) => {
     res.json(users);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Text search failed."
+    });
   }
 });
 
@@ -172,6 +249,12 @@ app.get("/pagination", async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 5;
 
+    if (page < 1) {
+      return res.status(400).json({
+        error: "Page must be greater than 0."
+      });
+    }
+
     const users = await User.find()
       .sort({ age: -1 })
       .skip((page - 1) * limit)
@@ -180,7 +263,9 @@ app.get("/pagination", async (req, res) => {
     res.json(users);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Pagination failed."
+    });
   }
 });
 

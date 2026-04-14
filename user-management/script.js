@@ -92,7 +92,7 @@ async function addUser() {
   const user = collectFormData();
   if (!user) return;
 
-  const res = await fetch(`/addUser`, {
+  const res = await fetch("/addUser", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user)
@@ -101,9 +101,11 @@ async function addUser() {
   const data = await res.json();
 
   if (!res.ok) {
-    alert(data.error || "Creation failed");
+    alert(data.error);
     return;
   }
+
+  alert(data.message);
 
   resetForm();
   loadUsers();
@@ -113,13 +115,21 @@ async function addUser() {
 async function updateUser() {
   const id = document.getElementById("userId").value;
   const user = collectFormData();
-  if (!user) return;
 
-  await fetch(`/updateUser/${id}`, {
+  const res = await fetch(`/updateUser/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user)
   });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error);
+    return;
+  }
+
+  alert(data.message);
 
   resetForm();
   loadUsers();
@@ -176,7 +186,19 @@ function collectFormData() {
 
 // delete
 async function deleteUser(id) {
-  await fetch(`/deleteUser/${id}`, { method: "DELETE" });
+  const res = await fetch(`/deleteUser/${id}`, {
+    method: "DELETE"
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error);
+    return;
+  }
+
+  alert(data.message);
+
   loadUsers();
 }
 
