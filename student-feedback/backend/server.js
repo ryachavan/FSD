@@ -29,7 +29,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Allow requests with no origin (same-origin requests like forms, same-server frontend)
+      // Allow localhost for development
+      // Allow configured frontend URL
       if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else if (process.env.NODE_ENV === 'production') {
+        // In production, allow all origins since frontend is served from same server
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
