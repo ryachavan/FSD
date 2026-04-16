@@ -10,6 +10,8 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedTeacher, setSelectedTeacher] = useState('');
 
   // Fetch student's own feedback
   const fetchMyFeedback = async () => {
@@ -38,6 +40,17 @@ const StudentDashboard = () => {
     setTimeout(() => setFeedbackSubmitted(false), 3000);
   };
 
+  // Get unique subjects and teachers
+  const uniqueSubjects = [...new Set(myFeedback.map(item => item.subject))];
+  const uniqueTeachers = [...new Set(myFeedback.map(item => item.teacherName))];
+
+  // Filter feedback based on selected filters
+  const filteredFeedback = myFeedback.filter(item => {
+    const subjectMatch = !selectedSubject || item.subject === selectedSubject;
+    const teacherMatch = !selectedTeacher || item.teacherName === selectedTeacher;
+    return subjectMatch && teacherMatch;
+  });
+
   return (
     <div className="dashboard">
       <Navbar />
@@ -63,20 +76,62 @@ const StudentDashboard = () => {
             ) : myFeedback.length === 0 ? (
               <p className="no-data">You haven't submitted any feedback yet.</p>
             ) : (
-              <div className="feedback-list">
-                {myFeedback.map((item) => (
-                  <div key={item._id} className="feedback-item">
-                    <div className="feedback-header">
-                      <h3>{item.subject}</h3>
-                      <span className="teacher-name">Teacher: {item.teacherName}</span>
-                    </div>
-                    <p className="feedback-text">{item.feedbackText}</p>
-                    <p className="feedback-date">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
+              <>
+                <div className="filter-section">
+                  <div className="filter-group">
+                    <label htmlFor="subject-filter">Filter by Subject:</label>
+                    <select
+                      id="subject-filter"
+                      value={selectedSubject}
+                      onChange={(e) => setSelectedSubject(e.target.value)}
+                      className="filter-select"
+                    >
+                      <option value="">All Subjects</option>
+                      {uniqueSubjects.map((subject) => (
+                        <option key={subject} value={subject}>
+                          {subject}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                ))}
-              </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="teacher-filter">Filter by Teacher:</label>
+                    <select
+                      id="teacher-filter"
+                      value={selectedTeacher}
+                      onChange={(e) => setSelectedTeacher(e.target.value)}
+                      className="filter-select"
+                    >
+                      <option value="">All Teachers</option>
+                      {uniqueTeachers.map((teacher) => (
+                        <option key={teacher} value={teacher}>
+                          {teacher}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="feedback-list">
+                  {filteredFeedback.length === 0 ? (
+                    <p className="no-data">No feedback matches the selected filters.</p>
+                  ) : (
+                    filteredFeedback.map((item) => (
+                      <div key={item._id} className="feedback-item">
+                        <div className="feedback-header">
+                          <h3>{item.subject}</h3>
+                          <span className="teacher-name">Teacher: {item.teacherName}</span>
+                        </div>
+                        <p className="feedback-text">{item.feedbackText}</p>
+                        <p className="feedback-date">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

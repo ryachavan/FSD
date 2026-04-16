@@ -9,6 +9,8 @@ const TeacherDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [deleteMessage, setDeleteMessage] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedTeacher, setSelectedTeacher] = useState('');
 
   // Fetch all feedback
   const fetchAllFeedback = async () => {
@@ -49,6 +51,19 @@ const TeacherDashboard = () => {
     }
   };
 
+  // Get unique subjects and teachers
+  const uniqueSubjects = [...new Set(allFeedback.map(item => item.subject))];
+  const uniqueTeachers = [...new Set(allFeedback.map(item => item.teacherName))];
+
+  // Filter feedback based on selected filters and sort by subject
+  const filteredFeedback = allFeedback
+    .filter(item => {
+      const subjectMatch = !selectedSubject || item.subject === selectedSubject;
+      const teacherMatch = !selectedTeacher || item.teacherName === selectedTeacher;
+      return subjectMatch && teacherMatch;
+    })
+    .sort((a, b) => a.subject.localeCompare(b.subject));
+
   return (
     <div className="dashboard">
       <Navbar />
@@ -68,29 +83,71 @@ const TeacherDashboard = () => {
             ) : allFeedback.length === 0 ? (
               <p className="no-data">No feedback submitted yet.</p>
             ) : (
-              <div className="feedback-list">
-                {allFeedback.map((item) => (
-                  <div key={item._id} className="feedback-item teacher-view">
-                    <div className="feedback-header">
-                      <h3>{item.subject}</h3>
-                      <span className="teacher-name">Teacher: {item.teacherName}</span>
-                    </div>
-                    <p className="student-name">From: {item.studentName}</p>
-                    <p className="feedback-text">{item.feedbackText}</p>
-                    <div className="feedback-footer">
-                      <p className="feedback-date">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </p>
-                      <button
-                        className="delete-btn"
-                        onClick={() => handleDeleteFeedback(item._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+              <>
+                <div className="filter-section">
+                  <div className="filter-group">
+                    <label htmlFor="subject-filter">Filter by Subject:</label>
+                    <select
+                      id="subject-filter"
+                      value={selectedSubject}
+                      onChange={(e) => setSelectedSubject(e.target.value)}
+                      className="filter-select"
+                    >
+                      <option value="">All Subjects</option>
+                      {uniqueSubjects.map((subject) => (
+                        <option key={subject} value={subject}>
+                          {subject}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                ))}
-              </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="teacher-filter">Filter by Teacher:</label>
+                    <select
+                      id="teacher-filter"
+                      value={selectedTeacher}
+                      onChange={(e) => setSelectedTeacher(e.target.value)}
+                      className="filter-select"
+                    >
+                      <option value="">All Teachers</option>
+                      {uniqueTeachers.map((teacher) => (
+                        <option key={teacher} value={teacher}>
+                          {teacher}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                </div>
+
+                <div className="feedback-list">
+                  {filteredFeedback.length === 0 ? (
+                    <p className="no-data">No feedback matches the selected filters.</p>
+                  ) : (
+                    filteredFeedback.map((item) => (
+                      <div key={item._id} className="feedback-item teacher-view">
+                        <div className="feedback-header">
+                          <h3>{item.subject}</h3>
+                          <span className="teacher-name">Teacher: {item.teacherName}</span>
+                        </div>
+                        <p className="feedback-text">{item.feedbackText}</p>
+                        <div className="feedback-footer">
+                          <p className="feedback-date">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </p>
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDeleteFeedback(item._id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
