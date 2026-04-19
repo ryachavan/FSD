@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dynamic Contact Form</title>
+</head>
+<body>
+  <h2>Contact Form</h2>
+
+  <input type="text" id="name" placeholder="Enter Name">
+  <br><br>
+  <input type="email" id="email" placeholder="Enter Email">
+  <br><br>
+  <input type="text" id="phone" placeholder="Enter Phone" inputmode="numeric" maxlength="10">
+  <br><br>
+  <button onclick="addContact()">Add Contact</button>
+
+  <hr>
+
+  <h3>Contact List</h3>
+  <div id="contactList"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
