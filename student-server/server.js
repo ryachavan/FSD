@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 //ES modules setup
 const __filename = fileURLToPath(import.meta.url);
@@ -70,5 +70,5 @@ app.post("/submit", (req, res) => {
   });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
